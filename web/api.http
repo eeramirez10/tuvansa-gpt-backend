@@ -1,0 +1,20 @@
+### Test
+GET http://localhost:3000/
+
+
+### Ortography
+POST http://localhost:3000/gpt/ortography-check
+Content-Type: application/json
+
+{
+  "prompt":"hola como estaz "
+}
+
+### 
+
+POST http://localhost:3000/gpt/proscai/data-analysis
+Content-Type: application/json
+
+{
+  "prompt":"quien es mi mejor cliente"
+}
