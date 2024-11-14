@@ -3,8 +3,28 @@ export const schema = `
   consideraciones a tomar:
 
   1. DDCANTF no existe es DCANTF
-  2 no dejes nada abiguo cuando hagas las queries osea pon siempre la tabla  punto seguio del campo
+  2  no dejes nada abiguo cuando hagas las queries osea pon siempre la tabla  punto seguio del campo
   3. No existen las row DD(seguido del nombbre) si aplica solo empieza con una sola D
+  4. Cuando soliciten ventas, ingresos o importes y no te especifiquen ninguna fecha el mes que te digan del año actual 
+  5. El campo DCANTF es el campo que muestras la venta con IVA 
+  6. El compo DBRUTO es el importe sin IVA
+  7. Siempre que te pidan las ventas, o ingresos, o importes utiliza el campo DBRUTO
+  8. El campo DPAR1 es el campo que muestra el Vendedor o el agente de ventas
+  9. La sucursal 1 es MEXICO, 2 es MONTERREY, 3 es VERACRUZ, 4 es MEXICALI, 5 es QUERETARO Y 6 es CANCUN
+  10. En los documentos DITIPMV que contine FA,FB,FC,FD,FZ,FV son los documentos facturas y debe de estar el campo DSTATUSCFD con valor 3. Estos dumentos representan las ventas
+  11. el campo CLICOD es el cliente de los documentos
+  12. Cuando te soliciten ventas por cliente el campo es el CLICOD pero debes de mostrarl el dato con CLINOM
+  13. cuando te soliciten las devoluiones utiliza la instruccion mid(DNUM,1,1)='D' y debe de estar el campo DSTATUSCFD con valor 3
+  14. Cuando te pregunten ventas por producto el precio es (AICANTF*AIPRECIO)
+  15. Cuando te pidan las compras por proveedor incluye esta instruccion mid(DNUM,1,1)='R'
+  16. El CLIPRV es el codigo del prooveedor pero siempre muestra el campo PRVNOM
+  17. Cuando te soliciten ventas por producto la agrupacion es por el campo IEAN y omite el ITIPO=4 
+  18. El tipo de cambio es el campo dtipoc
+  19. Cuando te soliciten ventas por producto de la sucursal 1 utiliza el tipo de movimiento FA, sucursal 2 FB, sucursal 3 FC, sucursal 4 FD, sucursal 5 FZ y sucursal 6 FV
+  20. Cuando te soliciten ventas por producto siempre muestra el ICOD,IEAN y IDESCR
+  21. Cuando muestres las ventas por familia utiliza la familia IFAMB para agrupar las ventas 
+  22. Cuando exista un aunion entre las tablas no uses JOIN usa LEFT JOIN
+  23. Cuando te soliciten informacion de familias utiliza la intruccion LEFT JOIN FDOC ON FDOC.DSEQ=FAXINV.DSEQ Y LEFT JOIN FINV ON FINV.ISEQ=FAXINV.ISEQ Y COMO TABLA PRINCIPAL LA TABLA DE AUXILIARES
 
   FAXINV	CREATE TABLE faxinv ( -- TABLA AUXILIARES
               AISEQ int NOT NULL AUTO_INCREMENT,/ID_AUX_INV/ -- ESTE ES LA LLAVE ´RIMARIA DE LA TABLA AUXILIARES
@@ -39,13 +59,11 @@ CREATE TABLE fdoc ( -- TABLA DOCUMENTOS
   DBRUTO decimal(18,2) NOT NULL DEFAULT '0.00', -- /IMP_BRUTO/ -- ESTE ES EL IMPORTE ANTES DE IVA DEL DOCUMENTO
   DUTILID decimal(18,2) NOT NULL DEFAULT '0.00', -- /UTILIDAD/ -- ESTA ES LA UTILIDAD GENERADA DEL TOTAL DE LA VENTA MENOS EL IMPORTE TOTAL DEL COSTO
   DCANTF decimal(18,2) NOT NULL DEFAULT '0.00', -- /IMPORTE/ -- ESTE ES EL TOTAL DE LA FACTURA CON IVA
-  DTIPOC decimal(18,8) NOT NULL DEFAULT '0.00000000', -- /TIPO_CAMBIO/ -- ESTE ES EL TIPO DE CAMBIO DEL DIA QUE SE REALIZA EL DOCUEMNTO
   DREFER varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /REFERENCIA/ -- ESTE ES UNA REFERENCIA DEL DOCUMENTO
   DREFERELLOS varchar(23) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /PEDIDO_CLIENTE/ -- ESTE ES EL PEDIDO DEL O REFERENCIA DEL CLIENTE
   DESCXC tinyint unsigned NOT NULL DEFAULT '0', -- /CXC/ -- ESTE CAMPO ES PARA SABER SI EL DOCUMENTO YA FUE PAGADO A UN NO
   DPAR1 varchar(5) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /AGENTE/ -- ESTE ES EL PÁRAMETRO DEL VENDEDOR CON EL QUE SE CLASIFICA EL DOCUMENTO
   DCOSTOFLETE decimal(18,2) NOT NULL DEFAULT '0.00', -- /COSTO_FLETE/ -- ESTE ES EL COSTO DEL FLETE CUANDO EL DOCUEMNTO SE EMBARCA
-  DTIPOC2 decimal(18,8) NOT NULL DEFAULT '0.00000000', -- /TIPO_CAMBIO2/ -- ESTE ES ELL TIPO DE CAMBIO DEL DOCUMENTO
   DPESO decimal(18,2) NOT NULL DEFAULT '0.00', -- /PESO_TOTAL/ -- ESTE ES LA TOTAL DEL PESO DE CADA CODIGO QUE SE GUARDA EN EL DOCUMENTO
   DCANCELADA tinyint unsigned NOT NULL DEFAULT '0', -- /CANCELADA/ -- ESTE CAMPO ES PARA SABER SI EL DOCUMENTO ESTA CANCELADO O NO
   DSTATUSCFD int NOT NULL DEFAULT '0', -- /STATUS_CFD/ -- ESTE ES EL CAMPO QUE GUARDA EL STATUS DE LA FACTURA PARA SABER SI YA ESTA TIMBRADA
@@ -64,6 +82,7 @@ CREATE TABLE finv ( /TABLA DE INVENTARIOS /
   ISEQ int NOT NULL AUTO_INCREMENT, /ID_INVENTARIOS/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA INVENTARIOS
   ICOD varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CODIGO/ -- ESTE ES EL CODIGO DEL PRODUCTO
   IEAN varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL CAMPO QUE GUARDA LA CLAVE DEL PRODUCTO
+  ITIPO decimal(18,0) NOT NULL DEFAULT '0',-- ESTE ES EL TIPO DE PRODUCTO
   IDESCR varchar(60) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CLAVE/ -- ESTA CAMPO ES LA DESCRIPCION DEL CODIGO
   IPEDCLI decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_CLIENTE/ -- ESTE CAMPO GUARDA LA CANTIDAD PEDIDA DE CLIENTES 
   IPEDPRV decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_PROVEEDOR/ -- ESTE CAMPO GUARDA LA CANTIDAD ORDENADA A PROVEEDORES
@@ -74,7 +93,7 @@ CREATE TABLE finv ( /TABLA DE INVENTARIOS /
   IFAM2 varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_PRODUCTO/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE PRODUCTO
   IFAM3 varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_TIPO/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE TIPO
   IFAM4 varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_MATERIAL/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE MATERIAL
-  IFAM5 varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_SATUV/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE SATUV
+  IFAMB varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_SATUV/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE SATUV
   IPESO double NOT NULL DEFAULT '0', /PESO/ -- ESTE CAMPO GUARDA EL PESO DEL PRODUCTO ESTA EN KILOS
   PRIMARY KEY (ISEQ), /ID_INVENTARIOS/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE
 );
