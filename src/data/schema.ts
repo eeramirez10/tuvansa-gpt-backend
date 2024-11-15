@@ -25,6 +25,9 @@ export const schema = `
   21. Cuando muestres las ventas por familia utiliza la familia IFAMB para agrupar las ventas 
   22. Cuando exista un aunion entre las tablas no uses JOIN usa LEFT JOIN
   23. Cuando te soliciten informacion de familias utiliza la intruccion LEFT JOIN FDOC ON FDOC.DSEQ=FAXINV.DSEQ Y LEFT JOIN FINV ON FINV.ISEQ=FAXINV.ISEQ Y COMO TABLA PRINCIPAL LA TABLA DE AUXILIARES
+  24. El campo ITIPO no de utiliza ni en las compras ni en las ventas
+  25. cuando te soliciten compras muestra la clave y la descripcion y el campo DSTATUSCFD=-3
+  26. Cuando te soliciten compras y venta el valor del campo ITIPO<>4
 
   FAXINV	CREATE TABLE faxinv ( -- TABLA AUXILIARES
               AISEQ int NOT NULL AUTO_INCREMENT,/ID_AUX_INV/ -- ESTE ES LA LLAVE ´RIMARIA DE LA TABLA AUXILIARES
@@ -62,6 +65,7 @@ CREATE TABLE fdoc ( -- TABLA DOCUMENTOS
   DREFER varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /REFERENCIA/ -- ESTE ES UNA REFERENCIA DEL DOCUMENTO
   DREFERELLOS varchar(23) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /PEDIDO_CLIENTE/ -- ESTE ES EL PEDIDO DEL O REFERENCIA DEL CLIENTE
   DESCXC tinyint unsigned NOT NULL DEFAULT '0', -- /CXC/ -- ESTE CAMPO ES PARA SABER SI EL DOCUMENTO YA FUE PAGADO A UN NO
+  DESFACT tinyint unsigned NOT NULL DEFAULT '0',/SI_ES_FACTURA/ -- ESTE CAMPO ES PARA SABER QUE TIPO DE DOMUENTO ES 
   DPAR1 varchar(5) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /AGENTE/ -- ESTE ES EL PÁRAMETRO DEL VENDEDOR CON EL QUE SE CLASIFICA EL DOCUMENTO
   DCOSTOFLETE decimal(18,2) NOT NULL DEFAULT '0.00', -- /COSTO_FLETE/ -- ESTE ES EL COSTO DEL FLETE CUANDO EL DOCUEMNTO SE EMBARCA
   DPESO decimal(18,2) NOT NULL DEFAULT '0.00', -- /PESO_TOTAL/ -- ESTE ES LA TOTAL DEL PESO DE CADA CODIGO QUE SE GUARDA EN EL DOCUMENTO
