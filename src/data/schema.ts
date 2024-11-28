@@ -1,11 +1,25 @@
 export const schema = `
 
   consideraciones a tomar:
+  1. La relacion de las tablas es la siguiente:
+
+  AUXILIARES.DSEQ se relaciona con DOCUMENTOS.DSEQ y la relación es de Muchos a Uno  con DOCUMENTOS
+  INVENTARIOS.ISEQ se relaciona con AUXILIARES.ISEQ y la relación es de Uno a Muchos  con AUXILIARES
+  CLIENTES.CLISEQ se relaciona con DOCUMENTOS.CLISEQ y la relación es de Uno a Muchos con DOCUMENTOS
+  FAMILIAS.FAMTNUM se relaciona con INVENTARIOS.IFAMB y la relación es de Uno a Muchos con INVENTARIOS
+  VENDEDORES.FAGTNUM se relaciona con DOCUMENTOS.DPAR1 y la relación es de Uno a Muchos con DOCUMENTOS
+  
+  DOCUMENTOS: Usa esta tabla para obtener información sobre Facturas,Remisiones,Recpeciones,Devoluciones o Notas de Credito sobre totales de documentos.
+  INVENTARIOS: Busca aquí los detalles de un producto, como el nombre, descripcion.
+  CLIENTES: Usa esta tabla para buscar nombres, correos o datos de clientes.
+  AUXILIARES : Busca aquí los detalles de una venta, como cantidad,precio,costo.
+  FAMILIAS : Busca aqui los nombre de la familias para las ventas
+  VENDEDORES aqui buscas los nombres de los vendedores o los agentes de ventas de cada documento
 
   1. DDCANTF no existe es DCANTF
   2  no dejes nada abiguo cuando hagas las queries osea pon siempre la tabla  punto seguio del campo
   3. No existen las row DD(seguido del nombbre) si aplica solo empieza con una sola D
-  4. Cuando soliciten ventas, ingresos o importes y no te especifiquen ninguna fecha el mes que te digan del año actual 
+  4. Cuando soliciten ventas, ingresos o importes y no te especifiquen de que año, utiliza YEAR(CURDATE().
   5. El campo DCANTF es el campo que muestras la venta con IVA 
   6. El compo DBRUTO es el importe sin IVA
   7. Siempre que te pidan las ventas, o ingresos, o importes utiliza el campo DBRUTO
@@ -18,16 +32,20 @@ export const schema = `
   14. Cuando te pregunten ventas por producto el precio es (AICANTF*AIPRECIO)
   15. Cuando te pidan las compras por proveedor incluye esta instruccion mid(DNUM,1,1)='R'
   16. El CLIPRV es el codigo del prooveedor pero siempre muestra el campo PRVNOM
-  17. Cuando te soliciten ventas por producto la agrupacion es por el campo IEAN y omite el ITIPO=4 
+  17. Cuando te soliciten ventas por producto la agrupacion es por el campo IEAN y el valor del campo ITIPO debe de ser diferente de 4 
   18. El tipo de cambio es el campo dtipoc
   19. Cuando te soliciten ventas por producto de la sucursal 1 utiliza el tipo de movimiento FA, sucursal 2 FB, sucursal 3 FC, sucursal 4 FD, sucursal 5 FZ y sucursal 6 FV
   20. Cuando te soliciten ventas por producto siempre muestra el ICOD,IEAN y IDESCR
-  21. Cuando muestres las ventas por familia utiliza la familia IFAMB para agrupar las ventas 
+  21. Cuando te soliciten ventas por familia utiliza la familia IFAMB para agrupar las ventas 
   22. Cuando exista un aunion entre las tablas no uses JOIN usa LEFT JOIN
-  23. Cuando te soliciten informacion de familias utiliza la intruccion LEFT JOIN FDOC ON FDOC.DSEQ=FAXINV.DSEQ Y LEFT JOIN FINV ON FINV.ISEQ=FAXINV.ISEQ Y COMO TABLA PRINCIPAL LA TABLA DE AUXILIARES
-  24. El campo ITIPO no de utiliza ni en las compras ni en las ventas
+  24. En las ventas por familia la union con la tabla de famias es LEFT JOIN FFAM AS FAMB ON FAMB.FAMTNUM=FINV.IFAMB, y para poner los campor debes de usar el FAMB como nombre de la tabla
   25. cuando te soliciten compras muestra la clave y la descripcion y el campo DSTATUSCFD=-3
-  26. Cuando te soliciten compras y venta el valor del campo ITIPO<>4
+  26. Cuando te soliciten compras y ventas el valor del campo debe de ser ITIPO<>4 
+  27. Siempre que te pidan las ventas por familia muestra los nombres y ordena de mayor a menos las ventas. e incluye la tabla de INVENTARIOS en la consulta
+  28. DFECHA es el campo donde se almacena la fecha de cada venta.
+  29. No utilices el AS para poner el mismo nombre de la tabla
+  30. En las ventas o compras donde utilices la tabla de auxiliares, utiliza para el importe (FAXINV.AICANTF*FAXINV.AIPRECIO)
+  31. Cuando te soliciten ventas por agente o por vendedor, utiliza el importe (FAXINV.AICANTF*FAXINV.AIPRECIO)
 
   FAXINV	CREATE TABLE faxinv ( -- TABLA AUXILIARES
               AISEQ int NOT NULL AUTO_INCREMENT,/ID_AUX_INV/ -- ESTE ES LA LLAVE ´RIMARIA DE LA TABLA AUXILIARES
@@ -42,13 +60,12 @@ export const schema = `
               AIUNIDAD varchar(3) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '',/UNIDAD/ -- ESTA ES LA UNIDAD DE MEDIDA DEL CODIGO QUE ESTA EN CADA DOCUMENTO
               CLISEQ int NOT NULL DEFAULT '0',/ID_CLIENTES/ -- ESTE ES EL ID_CLIENTES ES LA RELACION CON LA TABLA DE CLIENTES 
               DSEQ int NOT NULL DEFAULT '0',/ID_DOCUMENTOS/ -- EESTE ES L ID_DOCUMENTOS ES LA RELACION CON LA TABLA DOCUMENTOS
-              ISEQ int NOT NULL DEFAULT '0',/ID_INVENTARIOS/ -- ESTE ES EL ID_INVENTARIOS ES LA RELACION CON LA TABLA INVENTARIOS
-              LOSEQ int NOT NULL DEFAULT '0',
+              ISEQ int NOT NULL DEFAULT '0',/ISEQ/ -- ES LA CLAVE PRIMARIA DE LA TABLA AUXILIARES
               PRIMARY KEY (AISEQ),/ID_AUX_INV/ -- ESTE ES EL ID DE LA TABLA DE AUXILIARES
-              UNIQUE KEY AISEQ (AISEQ),
-              KEY CLISEQ (CLISEQ),/ID_CLIENTES/  -- ESTE ES EL ID_CLIENTES ES LA RELACION CON LA TABLA DE CLIENTES 
-              KEY DSEQ (DSEQ),/ID_DOCUMENTOS/ -- ESTE ES EL ID_DOCUMENTOS ES LA RELACION CON LA TABLA DOCUMENTOS
-              KEY ISEQ (ISEQ),/ID_INVENTARIOS/ -- ESTE ES EL ID_INVENTARIOS ES LA RELACION CON LA TABLA INVENTARIOS
+              UNIQUE KEY AISEQ (AISEQ),ES LA CLAVE PRIMARIA DE LA TABLA AUXILIARES Y ES UNICA
+              KEY CLISEQ (CLISEQ),-- /CLISEQ/ -- ES UNA CLAVE FORANEA QUE SE CONECTA CON LA TABLA DE CLIENTES 
+              KEY DSEQ (DSEQ),/DSEQ/ -- ES UNA CLAVE FORANEA QUE SE CONECTA CON LA TABLA DE DOCUMENTOS 
+              KEY ISEQ (ISEQ),/ISEQ/ -- ES UNA CLAVE FORANEA QUE SE CONECTA CON LA TABLA DE INVENTARIOS 
             ) ENGINE=InnoDB AUTO_INCREMENT=592585 DEFAULT CHARSET=macroman COLLATE=macroman_bin
 
 CREATE TABLE fdoc ( -- TABLA DOCUMENTOS
@@ -56,7 +73,6 @@ CREATE TABLE fdoc ( -- TABLA DOCUMENTOS
   DNUM varchar(13) COLLATE macroman_bin NOT NULL DEFAULT '', -- /DOCTO/ -- ESTE ES EL NUMERO DE DOCUMENTO
   DCANT decimal(18,2) NOT NULL DEFAULT '0.00', -- /SALDO/ -- ESTA ES LA CANTIDAD QUE GUARDA EL SALDO DE UN DOCUMENTO
   DFECHA date NOT NULL DEFAULT '1900-12-31', -- /FECHA/ -- ESTA ES LA FECHA DE EMISION DEL DOCUMENTO
-  DVENCE date NOT NULL DEFAULT '1900-12-31', -- /VENCE/ -- ESTE ES EL VENCIMIENTO DEL DOCUMENTO
   DIVA decimal(18,2) NOT NULL DEFAULT '0.00', -- /IVA/ -- ESTE ES EL IVA DEL IMPORTE
   DDESC decimal(18,2) NOT NULL DEFAULT '0.00', -- /DESCTO/ -- ESTE ES EL DESCUENTO GENERAL DEL DOCUMENTO
   DBRUTO decimal(18,2) NOT NULL DEFAULT '0.00', -- /IMP_BRUTO/ -- ESTE ES EL IMPORTE ANTES DE IVA DEL DOCUMENTO
@@ -73,19 +89,18 @@ CREATE TABLE fdoc ( -- TABLA DOCUMENTOS
   DSTATUSCFD int NOT NULL DEFAULT '0', -- /STATUS_CFD/ -- ESTE ES EL CAMPO QUE GUARDA EL STATUS DE LA FACTURA PARA SABER SI YA ESTA TIMBRADA
   DITIPMV varchar(2) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /TIPO_MOVIMIENTO/ -- ESTE ES EL TIPO DE MOVIMIENTO QUE SE GUARDA POR CADA DOCUMENTO
   DMULTICIA tinyint unsigned NOT NULL DEFAULT '0', -- /SUCURSAL/ -- ESTE ES EL CAMPO QUE GUARDA DE QUE SUCURSAL ES EL DOCUMENTO
-  CLISEQ int NOT NULL DEFAULT '0', -- /ID_CLIENTES/ -- ESTE CAMPO ES CON EL QUE SE LIGA LA TABLA DE CLIENTES
-  PRVSEQ int NOT NULL DEFAULT '0', -- /ID_PROVEEDORES/ -- ESTE CAMPO ES CON EL QUE SE LIGA LA TABLA DE PROVEEDORES
-  PRIMARY KEY (DSEQ), 
-  UNIQUE KEY DSEQ (DSEQ), 
-  KEY CLISEQ (CLISEQ), -- /ID_CLIENTES/ -- ESTE CAMPO ES CON EL QUE SE LIGA LA TABLA DE CLIENTES
- 
+  CLISEQ int NOT NULL DEFAULT '0', -- /CLISEQ/ --ES UNA CLAVE FORANEA QUE SE CONECTA CON LA TABLA DE CLIENTES
+  PRVSEQ int NOT NULL DEFAULT '0', -- /PRVSEQ/ -- ES UNA CLAVE FORANEA QUE SE CONECTA CON LA TABLA DE PROVEEDORES
+  PRIMARY KEY (DSEQ), -- DSEQ ES LA CLAVE PRIMARIA DE LA TABLKA DOCUMENTOSW
+  UNIQUE KEY DSEQ (DSEQ), -- ES LA CLAVE PRIMARIA DE LA TABLA DOCUEMNTOS Y ES UNICA
+  
 ) ENGINE=InnoDB AUTO_INCREMENT=331186 DEFAULT CHARSET=macroman COLLATE=macroman_bin;
 
 
 CREATE TABLE finv ( /TABLA DE INVENTARIOS /
-  ISEQ int NOT NULL AUTO_INCREMENT, /ID_INVENTARIOS/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA INVENTARIOS
-  ICOD varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CODIGO/ -- ESTE ES EL CODIGO DEL PRODUCTO
-  IEAN varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL CAMPO QUE GUARDA LA CLAVE DEL PRODUCTO
+  ISEQ int NOT NULL AUTO_INCREMENT, /ISEQ/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA INVENTARIOS
+  ICOD varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /ICOD/ -- ESTE ES EL CODIGO DEL PRODUCTO
+  IEAN varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /IEAN /  ESTE ES EL CAMPO QUE GUARDA LA CLAVE DEL PRODUCTO
   ITIPO decimal(18,0) NOT NULL DEFAULT '0',-- ESTE ES EL TIPO DE PRODUCTO
   IDESCR varchar(60) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CLAVE/ -- ESTA CAMPO ES LA DESCRIPCION DEL CODIGO
   IPEDCLI decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_CLIENTE/ -- ESTE CAMPO GUARDA LA CANTIDAD PEDIDA DE CLIENTES 
@@ -99,8 +114,8 @@ CREATE TABLE finv ( /TABLA DE INVENTARIOS /
   IFAM4 varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_MATERIAL/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE MATERIAL
   IFAMB varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /FAMILIA_SATUV/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE SATUV
   IPESO double NOT NULL DEFAULT '0', /PESO/ -- ESTE CAMPO GUARDA EL PESO DEL PRODUCTO ESTA EN KILOS
-  PRIMARY KEY (ISEQ), /ID_INVENTARIOS/ -- ESTE CAMPO GUARDA LA FAMILIA QUE TIENE COMO NOMBRE
-);
+  PRIMARY KEY (ISEQ), /ID_INVENTARIOS/ -- ESTE ES LA CLAVE PRIMARIA DE LA TABLA INVENTARIOS
+
 
 CREATE TABLE fcli ( -- TABLA CLIENTES
   CLISEQ int NOT NULL AUTO_INCREMENT, -- /ID_CLIENTES/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA CLIENTES
@@ -117,6 +132,23 @@ CREATE TABLE fcli ( -- TABLA CLIENTES
   PRIMARY KEY (CLISEQ) -- /ID_CLIENTES/
 );
 
+# Table	Create Table
+FFAM	CREATE TABLE ffam ( -- TABLA FAMILIAS
+  FAMTNUM varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- FAMTNUM ESTE ES LA CLAVE PRIMARIA DE LA TABLA DE FAMILIAS
+  FAMDESCR varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE CAMPO ES LA DESCRIPCION DE LA FAMILIA
+  FAMT varchar(1) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE CAMPO ES EL NUMERO DE LA FAMILIA
+  FAMNUM varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE CAMPO ES EL CODIGO DE LA FAMILIA
+   KEY FAMTNUM (FAMTNUM), -- ESTE CAMPO ES LA CLAVE PRIMARIA DE LA TABLA DE FAMILIAS
+  ) ENGINE=InnoDB AUTO_INCREMENT=685 DEFAULT CHARSET=macroman COLLATE=macroman_bin
 
+
+  # Table	Create Table
+  FAG	CREATE TABLE fag (  -- TABLA VENDEDORES
+  AGTNUM varchar(5) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES LA CLAVE PRIMARIA DE LA TABLA DE VENDEDORES
+  AGDESCR varchar(45) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE CAMPO DESCRIBE EL NOMBRE DE ALGENTE O DEL VENDEDOR EN LAS VENTAS
+  AGT varchar(1) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL NUMERO DEL PARAMETRO EN LA TABLA DE VENDEDORES
+  AGNUM varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL CODIGO DEL VENDEDOR EN LA TABLA
+  KEY AGTNUM (AGTNUM), -- ESTE ES LA CLAVE PRIMARIA DE LA TABLA DE VENDEDORES
+  INCREMENT=290 DEFAULT CHARSET=macroman COLLATE=macroman_bin
 
 `;
