@@ -12,9 +12,9 @@ Content-Type: application/json
 
 ### 
 
-POST http://localhost:3000/gpt/proscai/data-analysis
+POST http://localhost:3500/gpt/proscai/data-analysis
 Content-Type: application/json
 
 {
-  "prompt":"quien es mi mejor cliente"
+  "prompt":"quien es mi mejor cliente de 2020?"
 }

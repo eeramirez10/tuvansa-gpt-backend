@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { executeSqlQueryUseCase, orthographyCheckUseCase } from './use-cases';
 import { OrthographyDto } from './dtos';
@@ -5,9 +6,10 @@ import OpenAI from 'openai';
 import { DataAnalysisDto } from './dtos/dataAnalysis.dto';
 import {
   dataAnalysisUseCase,
-  DataAnalysisUseCaseResponse,
 } from './use-cases/dataAnalysis.use-case';
 import { MysqlService } from 'nest-mysql2';
+// import { transformSqlToUserText } from './use-cases/transformSqltoUsertext.use-case';
+import { CustomError } from 'src/errors/custom.error';
 import { transformSqlToUserText } from './use-cases/transformSqltoUsertext.use-case';
 
 @Injectable()
@@ -27,27 +29,30 @@ export class GptService {
     });
   }
 
-  async dataAnalysis(
-    body: DataAnalysisDto,
-  ): Promise<DataAnalysisUseCaseResponse> {
-    const data = await dataAnalysisUseCase(this.openai, {
+  async dataAnalysis(body: DataAnalysisDto) {
+    const [error, data] = await dataAnalysisUseCase(this.openai, {
       prompt: body.prompt,
     });
 
-    if (data.error !== null) return data;
+    if (error) throw CustomError.badRequest(error);
+
 
     const results = await executeSqlQueryUseCase(this.db, data.query);
 
-    const responseToHuman = await transformSqlToUserText(this.openai, {
+    const [tranformError, result] = await transformSqlToUserText(this.openai, {
       userQuestion: body.prompt,
       sqlResult: results,
       humanQuery: data.query,
     });
 
+    if (tranformError) throw CustomError.badRequest(error);
+
+
+
     return {
-      ...data,
-      queryResults: results,
-      responseToHuman,
-    };
+      result: result.result,
+      originalPrompt: body.prompt
+    }
+
   }
 }

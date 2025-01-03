@@ -1,77 +1,84 @@
-import { QueryResult } from 'mysql2';
+/* eslint-disable prettier/prettier */
 import OpenAI from 'openai';
 import { schema } from 'src/data/schema';
+import { CustomError } from 'src/errors/custom.error';
 
 interface Options {
   prompt: string;
 }
 
 export interface DataAnalysisUseCaseResponse {
-  query?: string;
-  queryResults?: QueryResult;
-  error?: string;
+  query: string;
   originalPrompt: string;
-  responseToHuman: string;
+
 }
 
-export const dataAnalysisUseCase = async (
-  openai: OpenAI,
-  options: Options,
-): Promise<DataAnalysisUseCaseResponse> => {
+export const dataAnalysisUseCase = async (openai: OpenAI, options: Options): Promise<[string?, DataAnalysisUseCaseResponse?]> => {
   const { prompt } = options;
 
-  const completion = await openai.chat.completions.create({
-    messages: [
-      {
-        role: 'system',
-        content: `
-          Dado los siguientes esquemas escritos en sql que te voy a pasar como ejemplo, 
-          quiero que hagas la consulta en base a lo que te pida el usuario y quiero que me des 
-          de la siguiete manera: 
 
-          no me lo pongas de esta manera:
+  try {
 
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: `
+  
+            te dejo el esquema de la base de datos, haz el query correspondiente como te lo piden
+  
+            schemas: 
+  
+            ${schema}
+  
+            No quiero que me des explicaiones de como lo hiciste solo quiero el json
+            si todo sale bien retornamelo en json de la siguente manera:
+  
+            {
+              "query": aqui va el sql que generaste,
+              "ok": true o false en caso de que haya un error,
+              "error": aqui el error en caso de que exista si no existe entonces null
+            }
+  
+            schemas: 
+  
+            ${schema}
+            
           
+          `,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      model: 'gpt-4o-mini',
+      max_tokens: 1000,
+      temperature: 0.1,
+    });
+
+    const content = JSON.parse(
+      completion.choices[0].message.content.replace(/```json|```/g, ''),
+    );
+
+    if (content.error) return [content.error]
+
+    return [undefined, {
+      originalPrompt: prompt,
+      query: content.query
+    }];
 
 
-          {
-            "query": "El query que vas a generar",
-            "error": null,
-            "originalPrompt": "Lo que te escribio el usuario"
-          }
+  } catch (error) {
+    console.log(error)
+    if(error instanceof CustomError){
+      
+      throw CustomError.badRequest(error.message)
+    }
 
-          schemas: 
+    throw CustomError.internalServer(error.message)
+  }
 
-          ${schema}
-          
 
-          si hay un error retornalo de esta forma
 
-          ejemplo
-
-          {
-            "query": null,
-            error:" el error"
-            "originalPrompt": "Lo que te escribio el usuario"
-          }
-        
-        `,
-      },
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
-    model: 'gpt-4o',
-    max_tokens: 150,
-    temperature: 0.8,
-  });
-
-  console.log(completion.choices[0].message.content);
-
-  const content = JSON.parse(
-    completion.choices[0].message.content.replace(/```json|```/g, ''),
-  );
-
-  return { ...content, queryResults: '' };
 };
