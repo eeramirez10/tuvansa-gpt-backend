@@ -10,6 +10,24 @@ Content-Type: application/json
   "prompt":"hola como estaz "
 }
 
+### Disscuser 
+POST http://localhost:3500/gpt/pros-cons-discusser
+Content-Type: application/json
+
+{
+  "prompt":"¿Qué me puede servir más AWS o Google Cloud? no escribas mucho"
+}
+
+### Disscuser Stream
+POST http://localhost:3500/gpt/pros-cons-discusser-stream
+Content-Type: application/json
+
+{
+  "prompt":"¿Qué me puede servir más AWS o Google Cloud? no escribas mucho"
+}
+
+
+
 ### 
 
 POST http://localhost:3500/gpt/proscai/data-analysis

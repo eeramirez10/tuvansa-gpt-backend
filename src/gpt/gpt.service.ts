@@ -11,6 +11,9 @@ import { MysqlService } from 'nest-mysql2';
 // import { transformSqlToUserText } from './use-cases/transformSqltoUsertext.use-case';
 import { CustomError } from 'src/errors/custom.error';
 import { transformSqlToUserText } from './use-cases/transformSqltoUsertext.use-case';
+import { ProsConsDuscusserDto } from './dtos/pros-cons-discusser.dto';
+import { prosConsDisscuser } from './use-cases/prosConsDisscuser.use-case';
+import { prosConsDisscuserStreamUseCase } from './use-cases/prosConsDisscuserStream.use-case';
 
 @Injectable()
 export class GptService {
@@ -54,5 +57,13 @@ export class GptService {
       originalPrompt: body.prompt
     }
 
+  }
+
+  async prosConsDiscusser(body: ProsConsDuscusserDto) {
+    return await prosConsDisscuser(this.openai, { prompt: body.prompt })
+  }
+
+  async prosConsDiscusserStream(body: ProsConsDuscusserDto) {
+    return await prosConsDisscuserStreamUseCase(this.openai, { prompt: body.prompt })
   }
 }
