@@ -26,5 +26,5 @@ export const prosConsDisscuser = async (
     max_tokens: 150,
   });
 
-  return response.choices[0].message;
+  return { content: response.choices[0].message.content };
 };

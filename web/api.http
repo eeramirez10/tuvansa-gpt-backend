@@ -23,8 +23,19 @@ POST http://localhost:3500/gpt/pros-cons-discusser-stream
 Content-Type: application/json
 
 {
-  "prompt":"¿Qué me puede servir más AWS o Google Cloud? no escribas mucho"
+  "prompt":"¿Qué me puede servir más AWS o Google Cloud? no escribas mucho",
+  
 }
+
+### Disscuser Stream
+POST http://localhost:3500/gpt/translate
+Content-Type: application/json
+
+{
+  "prompt":"La Biodiversidad: Pilar Fundamental de la Vida en la Tierra La biodiversidad, que incluye la variedad de todos los seres vivos en la Tierra, desde microorganismos hasta grandes mamíferos y ecosistemas completos, es esencial para el equilibrio del planeta. Este concepto abarca no solo la diversidad de especies, sino también la diversidad genética dentro de estas y la variedad de ecosistemas que habitan. La importancia de preservar la biodiversidad no puede subestimarse, ya que de ella depende el bienestar humano y la estabilidad ambiental.",
+  "lang":"arabe"
+}
+
 
 
 

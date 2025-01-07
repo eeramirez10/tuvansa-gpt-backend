@@ -14,6 +14,8 @@ import { transformSqlToUserText } from './use-cases/transformSqltoUsertext.use-c
 import { ProsConsDuscusserDto } from './dtos/pros-cons-discusser.dto';
 import { prosConsDisscuser } from './use-cases/prosConsDisscuser.use-case';
 import { prosConsDisscuserStreamUseCase } from './use-cases/prosConsDisscuserStream.use-case';
+import { TranslateDto } from './dtos/translate.dto';
+import { translateUseCase } from './use-cases/translate.use-case';
 
 @Injectable()
 export class GptService {
@@ -65,5 +67,11 @@ export class GptService {
 
   async prosConsDiscusserStream(body: ProsConsDuscusserDto) {
     return await prosConsDisscuserStreamUseCase(this.openai, { prompt: body.prompt })
+  }
+
+  async translate(body:TranslateDto){
+
+    return await translateUseCase(this.openai, body)
+
   }
 }

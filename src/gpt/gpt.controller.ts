@@ -4,6 +4,7 @@ import { OrthographyDto } from './dtos';
 import { DataAnalysisDto } from './dtos/dataAnalysis.dto';
 import { ProsConsDuscusserDto } from './dtos/pros-cons-discusser.dto';
 import { Response } from 'express';
+import { TranslateDto } from './dtos/translate.dto';
 
 @Controller('gpt')
 export class GptController {
@@ -32,11 +33,22 @@ export class GptController {
     for await (const chunk of stream) {
       const piece = chunk.choices[0].delta.content;
 
-      console.log(piece);
-
       res.write(piece || '');
     }
 
+    res.end();
+  }
+
+  @Post('/translate')
+  async translate(@Body() translateDto: TranslateDto, @Res() res: Response) {
+    const stream = await this.gptService.translate(translateDto);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(HttpStatus.OK);
+
+    for await (const chunk of stream) {
+      const piece = chunk.choices[0].delta.content;
+      res.write(piece || '');
+    }
     res.end();
   }
 
