@@ -8,6 +8,7 @@ export const schema = `
   CLIENTES.CLISEQ se relaciona con DOCUMENTOS.CLISEQ y la relación es de Uno a Muchos con DOCUMENTOS
   FAMILIAS.FAMTNUM se relaciona con INVENTARIOS.IFAMB y la relación es de Uno a Muchos con INVENTARIOS
   VENDEDORES.FAGTNUM se relaciona con DOCUMENTOS.DPAR1 y la relación es de Uno a Muchos con DOCUMENTOS
+  DESCRIPCIONES.I2KEY se relaciona con INVENTARIOS.ISEQ y la relacion es uno a uno con DESCRIPCIONES
   
   DOCUMENTOS: Usa esta tabla para obtener información sobre Facturas,Remisiones,Recpeciones,Devoluciones o Notas de Credito sobre totales de documentos.
   INVENTARIOS: Busca aquí los detalles de un producto, como el nombre, descripcion.
@@ -15,6 +16,7 @@ export const schema = `
   AUXILIARES : Busca aquí los detalles de una venta, como cantidad,precio,costo.
   FAMILIAS : Busca aqui los nombre de la familias para las ventas
   VENDEDORES aqui buscas los nombres de los vendedores o los agentes de ventas de cada documento
+  DESCRIPCIONES Esta es la tabla es donde estan las descripciones completas de los productos
 
   1. DDCANTF no existe es DCANTF
   2  no dejes nada abiguo cuando hagas las queries osea pon siempre la tabla  punto seguio del campo
@@ -46,6 +48,10 @@ export const schema = `
   29. No utilices el AS para poner el mismo nombre de la tabla
   30. En las ventas o compras donde utilices la tabla de auxiliares, utiliza para el importe (FAXINV.AICANTF*FAXINV.AIPRECIO)
   31. Cuando te soliciten ventas por agente o por vendedor, utiliza el importe (FAXINV.AICANTF*FAXINV.AIPRECIO)
+  32. Cuando te pregunten cual es la venta del producto mas vendido utiliza (FAXINV.AICANTF*FAXINV.AIPRECIO) como el importe y mid(dnum,1,1)='F'
+  33. Siempre que te pidan las ventas incluye las devolciones la sucursal 1 utiliza el tipo de movimiento DA, sucursal 2 DB, sucursal 3 DC, sucursal 4 DD, sucursal 5 DE y sucursal 6 FV
+  34. Cuando soliciten ventas por proctuto siempre toma la descripcion de la tabla de descripcion y el campo es el I2DESCR y nombralo como descripcion
+
 
   FAXINV	CREATE TABLE faxinv ( -- TABLA AUXILIARES
               AISEQ int NOT NULL AUTO_INCREMENT,/ID_AUX_INV/ -- ESTE ES LA LLAVE ´RIMARIA DE LA TABLA AUXILIARES
@@ -101,7 +107,7 @@ CREATE TABLE finv ( /TABLA DE INVENTARIOS /
   ISEQ int NOT NULL AUTO_INCREMENT, /ISEQ/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA INVENTARIOS
   ICOD varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /ICOD/ -- ESTE ES EL CODIGO DEL PRODUCTO
   IEAN varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /IEAN /  ESTE ES EL CAMPO QUE GUARDA LA CLAVE DEL PRODUCTO
-  ITIPO decimal(18,0) NOT NULL DEFAULT '0',-- ESTE ES EL TIPO DE PRODUCTO
+  ITIPO decimal(18,0) NOT NULL DEFAULT '0',-- ESTE CAMPO ES PARA SABER SI SON PRODUCTOS O SERVICIOS  LOS PRODUCTOS SON LOS QUE TIENE ITIPO=1  Y LOS SERVICIOS SON LOS QUE TIENEN TIPO=4
   IDESCR varchar(60) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CLAVE/ -- ESTA CAMPO ES LA DESCRIPCION DEL CODIGO
   IPEDCLI decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_CLIENTE/ -- ESTE CAMPO GUARDA LA CANTIDAD PEDIDA DE CLIENTES 
   IPEDPRV decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_PROVEEDOR/ -- ESTE CAMPO GUARDA LA CANTIDAD ORDENADA A PROVEEDORES
@@ -150,5 +156,16 @@ FFAM	CREATE TABLE ffam ( -- TABLA FAMILIAS
   AGNUM varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL CODIGO DEL VENDEDOR EN LA TABLA
   KEY AGTNUM (AGTNUM), -- ESTE ES LA CLAVE PRIMARIA DE LA TABLA DE VENDEDORES
   INCREMENT=290 DEFAULT CHARSET=macroman COLLATE=macroman_bin
+
+
+  # Table	Create Table
+FINV2	CREATE TABLE finv2 ( -- TABLA DESCRIOPCIONES 
+  I2SEQ int NOT NULL AUTO_INCREMENT, -- ESTE CAMPO ES LA CLAVE PRIMARIA DE LA TABLA DESCRIPCIONES
+  I2DESCR varchar(4800) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '',  --  ESTA ES LA DESCRIPCION COMPLETA DE LOS PRODUCTOS
+  I2KEY decimal(18,0) NOT NULL DEFAULT '0', --  ESTA ES LA LLAVE QUE UNE A ESTA TABLA DESCRPCIONES CON LA TAB LA DE INVENTARIOS
+  PRIMARY KEY (I2SEQ), -- ESTA ES SU CLAVE PRIMARIA DE LA TABLA DESCRIPCIONES
+  UNIQUE KEY I2SEQ (I2SEQ), --  ESTA ES SU CLAVE PRIMARIA
+  KEY I2KEY (I2KEY),  --  ESTE ES LA LLAVE DE UNION ENTRE LA TABLA DESCRIPCIONES Y LA TABLA DE INVENTARIOS
+) ENGINE=InnoDB AUTO_INCREMENT=62523 DEFAULT CHARSET=macroman COLLATE=macroman_bin
 
 `;

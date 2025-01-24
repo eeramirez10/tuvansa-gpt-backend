@@ -34,8 +34,8 @@ export const transformSqlToUserText = async (
       },
     ],
     model: 'gpt-4o-mini',
-    max_tokens: 500,
-    temperature: 0.8,
+    max_tokens: 1000,
+    temperature: 0.1,
   });
 
   console.log(completion.choices[0].message.content);

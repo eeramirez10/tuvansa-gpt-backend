@@ -62,9 +62,9 @@ export const dataAnalysisUseCase = async (
         content: prompt,
       },
     ],
-    model: 'gpt-4o',
-    max_tokens: 150,
-    temperature: 0.8,
+    model: 'gpt-4o-mini',
+    max_tokens: 1000,
+    temperature: 0.1,
   });
 
   console.log(completion.choices[0].message.content);
