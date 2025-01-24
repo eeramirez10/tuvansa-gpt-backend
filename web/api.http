@@ -10,11 +10,54 @@ Content-Type: application/json
   "prompt":"hola como estaz "
 }
 
-### 
-
-POST http://localhost:3000/gpt/proscai/data-analysis
+### Disscuser 
+POST http://localhost:3500/gpt/pros-cons-discusser
 Content-Type: application/json
 
 {
-  "prompt":"quien es mi mejor cliente"
+  "prompt":"¿Qué me puede servir más AWS o Google Cloud? no escribas mucho"
+}
+
+### Disscuser Stream
+POST http://localhost:3500/gpt/pros-cons-discusser-stream
+Content-Type: application/json
+
+{
+  "prompt":"¿Qué me puede servir más AWS o Google Cloud? no escribas mucho",
+  
+}
+
+### Disscuser Stream
+POST http://localhost:3500/gpt/translate
+Content-Type: application/json
+
+{
+  "prompt":"La Biodiversidad: Pilar Fundamental de la Vida en la Tierra La biodiversidad, que incluye la variedad de todos los seres vivos en la Tierra, desde microorganismos hasta grandes mamíferos y ecosistemas completos, es esencial para el equilibrio del planeta. Este concepto abarca no solo la diversidad de especies, sino también la diversidad genética dentro de estas y la variedad de ecosistemas que habitan. La importancia de preservar la biodiversidad no puede subestimarse, ya que de ella depende el bienestar humano y la estabilidad ambiental.",
+  "lang":"arabe"
+}
+
+
+### Text to voice
+POST http://localhost:3500/gpt/text-to-audio
+Content-Type: application/json
+
+{
+  "prompt":"Me huele el culo a caca",
+  "voice":"nova"
+}
+
+### Get mp3
+GET http://localhost:3500/gpt/text-to-audio/1736292765433
+
+
+
+
+
+### 
+
+POST http://localhost:3500/gpt/proscai/data-analysis
+Content-Type: application/json
+
+{
+  "prompt":"quien es mi mejor cliente de 2020?"
 }
