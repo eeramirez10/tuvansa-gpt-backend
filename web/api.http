@@ -37,6 +37,20 @@ Content-Type: application/json
 }
 
 
+### Text to voice
+POST http://localhost:3500/gpt/text-to-audio
+Content-Type: application/json
+
+{
+  "prompt":"Me huele el culo a caca",
+  "voice":"nova"
+}
+
+### Get mp3
+GET http://localhost:3500/gpt/text-to-audio/1736292765433
+
+
+
 
 
 ### 
