@@ -1,10 +1,57 @@
 export const schema = `
 
   consideraciones a tomar:
+  1. La relacion de las tablas es la siguiente:
+
+  AUXILIARES.DSEQ se relaciona con DOCUMENTOS.DSEQ y la relación es de Muchos a Uno  con DOCUMENTOS
+  INVENTARIOS.ISEQ se relaciona con AUXILIARES.ISEQ y la relación es de Uno a Muchos  con AUXILIARES
+  CLIENTES.CLISEQ se relaciona con DOCUMENTOS.CLISEQ y la relación es de Uno a Muchos con DOCUMENTOS
+  FAMILIAS.FAMTNUM se relaciona con INVENTARIOS.IFAMB y la relación es de Uno a Muchos con INVENTARIOS
+  VENDEDORES.FAGTNUM se relaciona con DOCUMENTOS.DPAR1 y la relación es de Uno a Muchos con DOCUMENTOS
+  DESCRIPCIONES.I2KEY se relaciona con INVENTARIOS.ISEQ y la relacion es uno a uno con DESCRIPCIONES
+  
+  DOCUMENTOS: Usa esta tabla para obtener información sobre Facturas,Remisiones,Recpeciones,Devoluciones o Notas de Credito sobre totales de documentos.
+  INVENTARIOS: Busca aquí los detalles de un producto, como el nombre, descripcion.
+  CLIENTES: Usa esta tabla para buscar nombres, correos o datos de clientes.
+  AUXILIARES : Busca aquí los detalles de una venta, como cantidad,precio,costo.
+  FAMILIAS : Busca aqui los nombre de la familias para las ventas
+  VENDEDORES aqui buscas los nombres de los vendedores o los agentes de ventas de cada documento
+  DESCRIPCIONES Esta es la tabla es donde estan las descripciones completas de los productos
 
   1. DDCANTF no existe es DCANTF
   2 no dejes nada abiguo cuando hagas las queries osea pon siempre la tabla  punto seguio del campo
   3. No existen las row DD(seguido del nombbre) si aplica solo empieza con una sola D
+  4. Cuando soliciten ventas, ingresos o importes y no te especifiquen de que año, utiliza YEAR(CURDATE().
+  5. El campo DCANTF es el campo que muestras la venta con IVA 
+  6. El compo DBRUTO es el importe sin IVA
+  7. Siempre que te pidan las ventas, o ingresos, o importes utiliza el campo DBRUTO
+  8. El campo DPAR1 es el campo que muestra el Vendedor o el agente de ventas
+  9. La sucursal 1 es MEXICO, 2 es MONTERREY, 3 es VERACRUZ, 4 es MEXICALI, 5 es QUERETARO Y 6 es CANCUN
+  10. En los documentos DITIPMV que contine FA,FB,FC,FD,FZ,FV son los documentos facturas y debe de estar el campo DSTATUSCFD con valor 3. Estos dumentos representan las ventas
+  11. el campo CLICOD es el cliente de los documentos
+  12. Cuando te soliciten ventas por cliente el campo es el CLICOD pero debes de mostrarl el dato con CLINOM
+  13. cuando te soliciten las devoluiones utiliza la instruccion mid(DNUM,1,1)='D' y debe de estar el campo DSTATUSCFD con valor 3
+  14. Cuando te pregunten ventas por producto el precio es (AICANTF*AIPRECIO)
+  15. Cuando te pidan las compras por proveedor incluye esta instruccion mid(DNUM,1,1)='R'
+  16. El CLIPRV es el codigo del prooveedor pero siempre muestra el campo PRVNOM
+  17. Cuando te soliciten ventas por producto la agrupacion es por el campo IEAN y el valor del campo ITIPO debe de ser diferente de 4 
+  18. El tipo de cambio es el campo dtipoc
+  19. Cuando te soliciten ventas por producto de la sucursal 1 utiliza el tipo de movimiento FA, sucursal 2 FB, sucursal 3 FC, sucursal 4 FD, sucursal 5 FZ y sucursal 6 FV
+  20. Cuando te soliciten ventas por producto siempre muestra el ICOD,IEAN y IDESCR
+  21. Cuando te soliciten ventas por familia utiliza la familia IFAMB para agrupar las ventas 
+  22. Cuando exista un aunion entre las tablas no uses JOIN usa LEFT JOIN
+  24. En las ventas por familia la union con la tabla de famias es LEFT JOIN FFAM AS FAMB ON FAMB.FAMTNUM=FINV.IFAMB, y para poner los campor debes de usar el FAMB como nombre de la tabla
+  25. cuando te soliciten compras muestra la clave y la descripcion y el campo DSTATUSCFD=-3
+  26. Cuando te soliciten compras y ventas el valor del campo debe de ser ITIPO<>4 
+  27. Siempre que te pidan las ventas por familia muestra los nombres y ordena de mayor a menos las ventas. e incluye la tabla de INVENTARIOS en la consulta
+  28. DFECHA es el campo donde se almacena la fecha de cada venta.
+  29. No utilices el AS para poner el mismo nombre de la tabla
+  30. En las ventas o compras donde utilices la tabla de auxiliares, utiliza para el importe (FAXINV.AICANTF*FAXINV.AIPRECIO)
+  31. Cuando te soliciten ventas por agente o por vendedor, utiliza el importe (FAXINV.AICANTF*FAXINV.AIPRECIO)
+  32. Cuando te pregunten cual es la venta del producto mas vendido utiliza (FAXINV.AICANTF*FAXINV.AIPRECIO) como el importe y mid(dnum,1,1)='F'
+  33. Siempre que te pidan las ventas incluye las devolciones la sucursal 1 utiliza el tipo de movimiento DA, sucursal 2 DB, sucursal 3 DC, sucursal 4 DD, sucursal 5 DE y sucursal 6 FV
+  34. Cuando soliciten ventas por proctuto siempre toma la descripcion de la tabla de descripcion y el campo es el I2DESCR y nombralo como descripcion
+
 
   FAXINV	CREATE TABLE faxinv ( -- TABLA AUXILIARES
               AISEQ int NOT NULL AUTO_INCREMENT,/ID_AUX_INV/ -- ESTE ES LA LLAVE ´RIMARIA DE LA TABLA AUXILIARES
@@ -61,9 +108,10 @@ CREATE TABLE fdoc ( -- TABLA DOCUMENTOS
 
 
 CREATE TABLE finv ( /TABLA DE INVENTARIOS /
-  ISEQ int NOT NULL AUTO_INCREMENT, /ID_INVENTARIOS/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA INVENTARIOS
-  ICOD varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CODIGO/ -- ESTE ES EL CODIGO DEL PRODUCTO
-  IEAN varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL CAMPO QUE GUARDA LA CLAVE DEL PRODUCTO
+  ISEQ int NOT NULL AUTO_INCREMENT, /ISEQ/ -- ESTA CAMPO ES LA LLAVE PRIMARIA DE LA TABLA INVENTARIOS
+  ICOD varchar(13) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /ICOD/ -- ESTE ES EL CODIGO DEL PRODUCTO
+  IEAN varchar(30) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- /IEAN /  ESTE ES EL CAMPO QUE GUARDA LA CLAVE DEL PRODUCTO
+  ITIPO decimal(18,0) NOT NULL DEFAULT '0',-- ESTE CAMPO ES PARA SABER SI SON PRODUCTOS O SERVICIOS  LOS PRODUCTOS SON LOS QUE TIENE ITIPO=1  Y LOS SERVICIOS SON LOS QUE TIENEN TIPO=4
   IDESCR varchar(60) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', /CLAVE/ -- ESTA CAMPO ES LA DESCRIPCION DEL CODIGO
   IPEDCLI decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_CLIENTE/ -- ESTE CAMPO GUARDA LA CANTIDAD PEDIDA DE CLIENTES 
   IPEDPRV decimal(18,2) NOT NULL DEFAULT '0.00', /PEDIDO_PROVEEDOR/ -- ESTE CAMPO GUARDA LA CANTIDAD ORDENADA A PROVEEDORES
@@ -95,5 +143,25 @@ CREATE TABLE fcli ( -- TABLA CLIENTES
 );
 
 
+
+  # Table	Create Table
+  FAG	CREATE TABLE fag (  -- TABLA VENDEDORES
+  AGTNUM varchar(5) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES LA CLAVE PRIMARIA DE LA TABLA DE VENDEDORES
+  AGDESCR varchar(45) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE CAMPO DESCRIBE EL NOMBRE DE ALGENTE O DEL VENDEDOR EN LAS VENTAS
+  AGT varchar(1) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL NUMERO DEL PARAMETRO EN LA TABLA DE VENDEDORES
+  AGNUM varchar(4) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '', -- ESTE ES EL CODIGO DEL VENDEDOR EN LA TABLA
+  KEY AGTNUM (AGTNUM), -- ESTE ES LA CLAVE PRIMARIA DE LA TABLA DE VENDEDORES
+  INCREMENT=290 DEFAULT CHARSET=macroman COLLATE=macroman_bin
+
+
+  # Table	Create Table
+FINV2	CREATE TABLE finv2 ( -- TABLA DESCRIOPCIONES 
+  I2SEQ int NOT NULL AUTO_INCREMENT, -- ESTE CAMPO ES LA CLAVE PRIMARIA DE LA TABLA DESCRIPCIONES
+  I2DESCR varchar(4800) CHARACTER SET macroman COLLATE macroman_bin NOT NULL DEFAULT '',  --  ESTA ES LA DESCRIPCION COMPLETA DE LOS PRODUCTOS
+  I2KEY decimal(18,0) NOT NULL DEFAULT '0', --  ESTA ES LA LLAVE QUE UNE A ESTA TABLA DESCRPCIONES CON LA TAB LA DE INVENTARIOS
+  PRIMARY KEY (I2SEQ), -- ESTA ES SU CLAVE PRIMARIA DE LA TABLA DESCRIPCIONES
+  UNIQUE KEY I2SEQ (I2SEQ), --  ESTA ES SU CLAVE PRIMARIA
+  KEY I2KEY (I2KEY),  --  ESTE ES LA LLAVE DE UNION ENTRE LA TABLA DESCRIPCIONES Y LA TABLA DE INVENTARIOS
+) ENGINE=InnoDB AUTO_INCREMENT=62523 DEFAULT CHARSET=macroman COLLATE=macroman_bin
 
 `;
